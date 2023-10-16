@@ -5,15 +5,21 @@ export class WebRTC {
   mediaStream: MediaStream | null = null;
 
   constructor() {
-    this.peerConnection = new RTCPeerConnection();
+    const configuration: RTCConfiguration = {
+      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+    };
+    this.peerConnection = new RTCPeerConnection(configuration);
 
     this.peerConnection.oniceconnectionstatechange = () => {
-      console.log('ice connection state: ', this.peerConnection.iceConnectionState)
-    }
+      console.log(
+        "ice connection state: ",
+        this.peerConnection.iceConnectionState
+      );
+    };
 
     this.peerConnection.onconnectionstatechange = () => {
-      console.log('connection state: ', this.peerConnection.connectionState)
-    }
+      console.log("connection state: ", this.peerConnection.connectionState);
+    };
   }
 
   async getMediaStream() {
@@ -21,7 +27,7 @@ export class WebRTC {
       video: true,
     });
     this.mediaStream = mediaStream;
-    mediaStream.getTracks().forEach(track => {
+    mediaStream.getTracks().forEach((track) => {
       this.peerConnection.addTrack(track, mediaStream);
     });
     return mediaStream;

@@ -16,7 +16,9 @@ export function useWebRTC() {
     }
     const offer = await webRTC.makeOffer();
     webSocket.sendOffer(offer, inputRef.current.value);
+    console.log('send offer')
     webSocket.onReceiveAnswer((data: OnReceiveAnswerData) => {
+      console.log('received remote answer')
       webRTC.setRemoteOffer(data.answer);
     })
     startLocalVideo();
@@ -31,6 +33,7 @@ export function useWebRTC() {
     webSocket.joinRoom(inputRef.current.value);
     
     webSocket.onReceiveOffer(async (data: OnReceiveOfferData) => {
+      console.log('received remote offer')
       webRTC.setRemoteOffer(data.offer);
       const answer = await webRTC.makeAnswer();
 
@@ -38,7 +41,7 @@ export function useWebRTC() {
         alert("could not send answer: missing room name!");
         return;
       }
-
+      console.log('send answer')
       webSocket.sendAnswer(answer, inputRef.current.value);
     });
 
