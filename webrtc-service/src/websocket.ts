@@ -4,14 +4,12 @@ import {Server as HTTPServer, createServer} from 'node:http';
 
 interface Room {
   users: string[];
-  offer: RTCSessionDescription;
   name: string;
   owner: string;
 }
 
 interface CreateRoomEvent {
   roomName: string;
-  offer: RTCSessionDescription;
 }
 
 interface JoinRoomEvent {
@@ -21,6 +19,11 @@ interface JoinRoomEvent {
 interface SendAnswerEvent {
   roomName: string;
   answer: RTCSessionDescription;
+}
+
+interface SendOfferEvent {
+  offer: RTCSessionDescriptionInit;
+  userId: string;
 }
 
 export class WebSocket {
@@ -43,6 +46,7 @@ export class WebSocket {
       this.handleOnCreateRoom(socket);
       this.handleOnJoinRoom(socket);
       this.handleOnSendAnswer(socket);
+      this.handleOnSendOffer(socket);
     });
   }
 
@@ -51,7 +55,6 @@ export class WebSocket {
       this.rooms.push({
         name: request.roomName,
         users: [],
-        offer: request.offer,
         owner: socket.id,
       });
 
@@ -67,16 +70,26 @@ export class WebSocket {
       room?.users.push(socket.id);
 
       logger.info(`user ${socket.id} is joining room ${room?.name}`);
-      this.io.to(socket.id).emit("receive-offer", {
-        offer: room?.offer,
+      this.io.to(room.owner).emit("user-join", {
+        userId: socket.id,
       });
     });
+  }
+
+  private handleOnSendOffer(socket: Socket) {
+    socket.on('send-offer', (request: SendOfferEvent) => {
+      const {userId, offer} = request;
+      logger.info(`user ${userId} is receiving offer`);
+      this.io.to(userId).emit('receive-offer', {
+        offer
+      })
+    })
   }
 
   private handleOnSendAnswer(socket: Socket) {
     socket.on("send-answer", (request: SendAnswerEvent) => {
       const room = this.getRoom(request.roomName);
-
+      logger.info(`user ${room.owner} is receiving answer`);
       this.io.to(room.owner).emit("receive-answer", {
         answer: request.answer,
       });

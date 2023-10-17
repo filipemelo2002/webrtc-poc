@@ -20,6 +20,10 @@ export class WebRTC {
     this.peerConnection.onconnectionstatechange = () => {
       console.log("connection state: ", this.peerConnection.connectionState);
     };
+
+    this.peerConnection.onnegotiationneeded  = () => {
+      console.log("renegotiation is needed ", this.peerConnection.connectionState)
+    }
   }
 
   async getMediaStream() {
@@ -35,22 +39,25 @@ export class WebRTC {
 
   async makeOffer() {
     const offer = await this.peerConnection.createOffer();
-    await this.peerConnection.setLocalDescription(offer);
     return offer;
   }
 
   async makeAnswer() {
     const answer = await this.peerConnection.createAnswer();
-    await this.peerConnection.setLocalDescription(answer);
     return answer;
   }
 
-  setRemoteOffer(offer: RTCSessionDescriptionInit) {
-    this.peerConnection.setRemoteDescription(offer);
+  async setRemoteOffer(offer: RTCSessionDescriptionInit) {
+    await this.peerConnection.setRemoteDescription(offer);
+  }
+
+  async setLocalOffer(offer: RTCSessionDescriptionInit) {
+    await this.peerConnection.setLocalDescription(offer);
   }
 
   onStream(cb: CallBack) {
     this.peerConnection.ontrack = function ({ streams: [stream] }) {
+      console.log(stream)
       cb(stream);
     };
   }

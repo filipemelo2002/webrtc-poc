@@ -8,6 +8,10 @@ export interface OnReceiveOfferData {
 export interface OnReceiveAnswerData {
   answer: RTCSessionDescriptionInit;
 }
+
+export interface OnUserJoinData {
+  userId: string;
+}
 export class WebSocket {
   private socket: Socket;
 
@@ -15,9 +19,8 @@ export class WebSocket {
     this.socket = io("http://localhost:3000");
   }
 
-  sendOffer(offer: RTCSessionDescriptionInit, roomName: string) {
+  createRoom(roomName: string) {
     this.socket.emit("create-room", {
-      offer,
       roomName,
     });
   }
@@ -30,6 +33,17 @@ export class WebSocket {
 
   onReceiveOffer(cb: CallBack) {
     this.socket.on("receive-offer", cb);
+  }
+
+  onUserJoin(cb: CallBack) {
+    this.socket.on("user-join", cb);
+  }
+
+  sendOffer(userId: string, offer: RTCSessionDescriptionInit) {
+    this.socket.emit('send-offer', {
+      userId,
+      offer
+    })
   }
 
   sendAnswer(answer: RTCSessionDescriptionInit, roomName: string) {
