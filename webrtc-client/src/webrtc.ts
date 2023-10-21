@@ -48,10 +48,12 @@ export class WebRTC {
   }
 
   async setRemoteOffer(offer: RTCSessionDescriptionInit) {
-    await this.peerConnection.setRemoteDescription(offer);
+    console.log("remote offer: ", offer);
+    await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
   }
 
   async setLocalOffer(offer: RTCSessionDescriptionInit) {
+    console.log("local offer: ", offer);
     await this.peerConnection.setLocalDescription(offer);
   }
 
