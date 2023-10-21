@@ -1,5 +1,7 @@
 type CallBack = (stream: MediaStream) => void;
 
+type ICECallBack = (candidate: RTCIceCandidate) => void;
+
 export class WebRTC {
   private peerConnection: RTCPeerConnection;
   mediaStream: MediaStream | null = null;
@@ -57,6 +59,18 @@ export class WebRTC {
     await this.peerConnection.setLocalDescription(offer);
   }
 
+  onICECandidateChange(cb: ICECallBack) {
+    this.peerConnection.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
+      if (event.candidate) {
+        cb(event.candidate);
+      }
+    }
+  }
+
+  async setICECandidate(candidate: RTCIceCandidate) {
+    await this.peerConnection.addIceCandidate(candidate);
+  }
+  
   onStream(cb: CallBack) {
     this.peerConnection.ontrack = function ({ streams: [stream] }) {
       console.log(stream)

@@ -21,6 +21,11 @@ interface SendAnswerEvent {
   answer: RTCSessionDescription;
 }
 
+interface SendICECandidateEvent {
+  roomName: string;
+  candidate: RTCIceCandidate;
+}
+
 interface SendOfferEvent {
   offer: RTCSessionDescriptionInit;
   userId: string;
@@ -47,6 +52,7 @@ export class WebSocket {
       this.handleOnJoinRoom(socket);
       this.handleOnSendAnswer(socket);
       this.handleOnSendOffer(socket);
+      this.handleOnSendICECandidate(socket);
     });
   }
 
@@ -96,6 +102,24 @@ export class WebSocket {
     });
   }
 
+  private handleOnSendICECandidate(socket: Socket) {
+    socket.on('send-ice-candidate', (request: SendICECandidateEvent) => {
+      const room = this.getRoom(request.roomName);
+      const isRoomOwner = room.owner === socket.id;
+      let userId = '';
+      if  (isRoomOwner) {
+        [userId] = room.users;
+      } else {
+        userId = room.owner;
+      }
+
+      logger.info(`user ${userId} is receiving new ICE Candidate`);
+
+      this.io.to(userId).emit('receive-ice-candidate', {
+        candidate: request.candidate
+      })
+    })
+  }
   private getRoom(roomName: string) {
     const room = this.rooms.find((r) => r.name === roomName);
     if (!room) {

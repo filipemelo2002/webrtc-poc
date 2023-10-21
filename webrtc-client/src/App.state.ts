@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { WebRTC } from "./webrtc";
-import { OnReceiveOfferData, OnReceiveAnswerData, WebSocket, OnUserJoinData } from "./websocket";
+import { OnReceiveOfferData, OnReceiveAnswerData,OnReceiveICECandidateData, WebSocket, OnUserJoinData } from "./websocket";
 
 const webRTC = new WebRTC();
 const webSocket = new WebSocket();
@@ -29,7 +29,7 @@ export function useWebRTC() {
       console.log('received remote answer')
       await webRTC.setRemoteOffer(data.answer);
     })
-    
+    setupIceCandidate();
     await startLocalVideo();
   };
 
@@ -52,10 +52,27 @@ export function useWebRTC() {
       console.log('send answer')
       webSocket.sendAnswer(answer, inputRef.current.value);
     });
-    
+    setupIceCandidate();
     webRTC.onStream(playVideo);
     webSocket.joinRoom(inputRef.current.value);
   };
+
+
+  function setupIceCandidate() {
+    webRTC.onICECandidateChange(candidate => {
+      console.log("ICE Candidate Change", candidate);
+      if (!inputRef.current?.value) {
+        alert("could not send ICE candidate: missing room name!");
+        return;
+      }
+      webSocket.sendICECandidate(candidate, inputRef.current?.value as string);
+    });
+
+    webSocket.onReceiveICECandidate(async (data: OnReceiveICECandidateData) => {
+      console.log("receive ICE Candidate", data.candidate);
+      await webRTC.setICECandidate(data.candidate);
+    })
+  }
 
   async function startLocalVideo() {
     const mediaDevice = await webRTC.getMediaStream();

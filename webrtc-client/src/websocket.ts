@@ -8,6 +8,9 @@ export interface OnReceiveOfferData {
 export interface OnReceiveAnswerData {
   answer: RTCSessionDescriptionInit;
 }
+export interface OnReceiveICECandidateData {
+  candidate: RTCIceCandidate;
+}
 
 export interface OnUserJoinData {
   userId: string;
@@ -51,6 +54,17 @@ export class WebSocket {
       answer,
       roomName,
     });
+  }
+
+  sendICECandidate(candidate: RTCIceCandidate, roomName: string) {
+    this.socket.emit("send-ice-candidate", {
+      candidate,
+      roomName
+    })
+  }
+
+  onReceiveICECandidate(cb: CallBack) {
+    this.socket.on("receive-ice-candidate", cb);
   }
 
   onReceiveAnswer(cb: CallBack) {
